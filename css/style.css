@@ -411,6 +411,26 @@ body {
   padding: 10px 0;
 }
 
+/* Add mask fade overlays on sides of the logos container */
+.logos-slider-container::before,
+.logos-slider-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 150px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.logos-slider-container::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-light), transparent);
+}
+.logos-slider-container::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-light), transparent);
+}
+
 .logos-track {
   display: flex;
   gap: 60px;
@@ -432,18 +452,24 @@ body {
   font-weight: 700;
   filter: grayscale(100%);
   opacity: 0.6;
-  transition: var(--transition);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease, opacity 0.3s ease, color 0.3s ease;
   cursor: default;
 }
 
 .logo-item:hover {
-  filter: grayscale(0%);
+  filter: grayscale(0%) drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
   opacity: 1;
   color: var(--text-light-main);
+  transform: translateY(-4px) scale(1.08);
 }
 
 .logo-icon {
   color: var(--primary);
+  transition: transform 0.3s ease;
+}
+
+.logo-item:hover .logo-icon {
+  transform: rotate(5deg) scale(1.1);
 }
 
 @keyframes scrollLogos {
@@ -475,32 +501,51 @@ body {
 
 .wave-transition .shape-fill-back {
   fill: var(--primary);
-  opacity: 0.08;
-  animation: driftBack 8s ease-in-out infinite;
+  opacity: 0.25;
+  animation: driftBack 10s ease-in-out infinite alternate;
   transform-origin: center bottom;
 }
 
 .wave-transition .wave-glow-line {
   stroke: url(#wave-glow-grad);
-  stroke-width: 2.5px;
+  stroke-width: 2px;
   stroke-linecap: round;
   fill: none;
   animation: pulseGlow 4s ease-in-out infinite;
 }
 
+.wave-transition .wave-laser-line {
+  stroke: #3b82f6;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  fill: none;
+  stroke-dasharray: 150 900;
+  animation: laserRun 6s linear infinite;
+  filter: drop-shadow(0 0 5px #3b82f6) drop-shadow(0 0 10px #60a5fa);
+}
+
 @keyframes driftBack {
-  0%, 100% { transform: translate(0, 4px) scale(1, 0.95); }
-  50% { transform: translate(-8px, 6px) scale(1.02, 0.92); }
+  0% { transform: translate(0, 3px) scale(1, 0.95); }
+  100% { transform: translate(-10px, 6px) scale(1.03, 0.93); }
 }
 
 @keyframes pulseGlow {
   0%, 100% {
-    opacity: 0.7;
-    filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+    opacity: 0.5;
+    filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4));
   }
   50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 18px rgba(59, 130, 246, 0.5));
+    opacity: 0.9;
+    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.7));
+  }
+}
+
+@keyframes laserRun {
+  0% {
+    stroke-dashoffset: 1050;
+  }
+  100% {
+    stroke-dashoffset: 0;
   }
 }
 
