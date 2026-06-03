@@ -473,6 +473,37 @@ body {
   fill: var(--bg-dark);
 }
 
+.wave-transition .shape-fill-back {
+  fill: var(--primary);
+  opacity: 0.08;
+  animation: driftBack 8s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.wave-transition .wave-glow-line {
+  stroke: url(#wave-glow-grad);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  fill: none;
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+@keyframes driftBack {
+  0%, 100% { transform: translate(0, 4px) scale(1, 0.95); }
+  50% { transform: translate(-8px, 6px) scale(1.02, 0.92); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 18px rgba(59, 130, 246, 0.5));
+  }
+}
+
 /* SECTION 5 — DEPOIMENTOS */
 .testimonials-section {
   padding-top: 120px;

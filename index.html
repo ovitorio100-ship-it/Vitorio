@@ -294,7 +294,20 @@
     <!-- Wave curve transition clear to dark at the end of section -->
     <div class="wave-transition">
       <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="wave-glow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.1"/>
+            <stop offset="25%" stop-color="#60A5FA" stop-opacity="0.85"/>
+            <stop offset="75%" stop-color="#38BDF8" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.1"/>
+          </linearGradient>
+        </defs>
+        <!-- Background decorative wave -->
+        <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C26.9,8.75,57.05,18.3,90.38,27.72,188,55.33,263.29,67.23,321.39,56.44Z" class="shape-fill-back"></path>
+        <!-- Main background wave -->
         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C26.9,8.75,57.05,18.3,90.38,27.72,188,55.33,263.29,67.23,321.39,56.44Z" class="shape-fill"></path>
+        <!-- Glowing neon border wave -->
+        <path d="M 0 0 C 26.9 8.75 57.05 18.3 90.38 27.72 C 188 55.33 263.29 67.23 321.39 56.44 c 58 -10.79 114.16 -30.13 172 -41.86 c 82.39 -16.72 168.19 -17.73 250.45 -.39 C 823.78 31 906.67 72 985.66 92.83 c 70.05 18.48 146.53 26.09 214.34 3" class="wave-glow-line"></path>
       </svg>
     </div>
   </section>
