@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kommo CRM Pipeline — AtendeOS</title>
+  <meta name="description" content="Simulação interativa do pipeline de leads do Kommo CRM com integração automática do AtendeOS.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Icons font (using standard SVG paths or simple icons) -->
+  <style>
+    :root {
+      --kommo-sidebar: #192330;
+      --kommo-sidebar-hover: #233143;
+      --kommo-sidebar-active: #2C3C52;
+      --kommo-bg: #F0F2F5;
+      --kommo-border: #E4E7EC;
+      --kommo-card-bg: #FFFFFF;
+      --kommo-text-main: #202630;
+      --kommo-text-muted: #64748B;
+      --primary: #3B82F6;
+      --whatsapp-color: #25D366;
+    }
+    
+    /* Dark Mode variables */
+    [data-theme="dark"] {
+      --kommo-bg: #0F172A;
+      --kommo-border: #334155;
+      --kommo-card-bg: #1E293B;
+      --kommo-text-main: #F8FAFC;
+      --kommo-text-muted: #94A3B8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--kommo-bg);
+      color: var(--kommo-text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 72px;
+      background-color: var(--kommo-sidebar);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      gap: 20px;
+      z-index: 10;
+    }
+
+    .sidebar-logo {
+      width: 40px;
+      height: 40px;
+      background-color: var(--primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .sidebar-item {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94A3B8;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .sidebar-item:hover {
+      background-color: var(--kommo-sidebar-hover);
+      color: white;
+    }
+
+    .sidebar-item.active {
+      background-color: var(--kommo-sidebar-active);
+      color: white;
+      border-left: 3px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      width: 48px;
+    }
+
+    /* MAIN CONTAINER */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      height: 70px;
+      background-color: var(--kommo-card-bg);
+      border-bottom: 1px solid var(--kommo-border);
+      padding: 0 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .breadcrumbs span {
+      color: var(--kommo-text-muted);
+    }
+
+    .breadcrumbs h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--kommo-text-main);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background-color: var(--kommo-bg);
+      border: 1px solid var(--kommo-border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      gap: 8px;
+      width: 250px;
+    }
+
+    .search-bar input {
+      border: none;
+      background: transparent;
+      outline: none;
+      color: var(--kommo-text-main);
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .btn-add-lead {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-add-lead:hover {
+      background-color: #2563EB;
+    }
+
+    .demo-widget-btn {
+      background-color: #0F172A;
+      color: #10B981;
+      border: 1px solid #10B981;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .demo-widget-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+
+    /* KANBAN BOARD */
+    .board-container {
+      flex: 1;
+      padding: 20px 30px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .column {
+      width: 280px;
+      flex-shrink: 0;
+      background-color: rgba(100, 116, 139, 0.04);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      max-height: 100%;
+      border: 1px dashed transparent;
+      transition: border-color 0.2s;
+    }
+
+    .column.drag-over {
+      border-color: var(--primary);
+      background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .column-header {
+      padding: 12px;
+      border-bottom: 2px solid var(--kommo-border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .column-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .column-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .column-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .column-count {
+      font-size: 0.75rem;
+      background-color: var(--kommo-border);
+      color: var(--kommo-text-muted);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .column-value {
+      font-size: 0.8rem;
+      color: var(--kommo-text-muted);
+      font-weight: 500;
+    }
+
+    .cards-list {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 150px;
+    }
+
+    /* LEAD CARD */
+    .lead-card {
+      background-color: var(--kommo-card-bg);
+      border: 1px solid var(--kommo-border);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+    }
+
+    .lead-card:hover {
+      box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    .lead-card:active {
+      cursor: grabbing;
+    }
+
+    .lead-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .lead-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--kommo-text-main);
+    }
+
+    .lead-channel-icon {
+      color: var(--whatsapp-color);
+      display: flex;
+      align-items: center;
+    }
+
+    .lead-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .lead-tag {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+    }
+
+    .lead-tag.tag-whatsapp {
+      background-color: rgba(37, 211, 102, 0.1);
+      color: #15803d;
+    }
+
+    .lead-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--kommo-border);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+
+    .lead-price {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--kommo-text-main);
+    }
+
+    .lead-task-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #10B981; /* green = done/ok, red = late, grey = none */
+    }
+
+    .lead-task-indicator.late {
+      background-color: #EF4444;
+      box-shadow: 0 0 6px #EF4444;
+    }
+    
+    .lead-task-indicator.none {
+      background-color: transparent;
+      border: 1.5px solid var(--kommo-text-muted);
+    }
+
+    /* MODAL DETALHES */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lead-modal {
+      width: 900px;
+      height: 600px;
+      background-color: var(--kommo-card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      display: flex;
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: transform 0.3s ease, background-color 0.3s;
+    }
+
+    .modal-overlay.active .lead-modal {
+      transform: translateY(0);
+    }
+
+    .modal-left {
+      width: 320px;
+      border-right: 1px solid var(--kommo-border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-left-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .modal-lead-title h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .modal-lead-title span {
+      font-size: 0.8rem;
+      color: var(--kommo-text-muted);
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--kommo-text-muted);
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+
+    .fields-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .field-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--kommo-text-muted);
+      text-transform: uppercase;
+    }
+
+    .field-value {
+      font-size: 0.9rem;
+      padding: 8px;
+      border-radius: 4px;
+      background-color: var(--kommo-bg);
+      border: 1px solid var(--kommo-border);
+      color: var(--kommo-text-main);
+    }
+
+    .modal-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--kommo-bg);
+    }
+
+    .modal-right-tabs {
+      height: 50px;
+      background-color: var(--kommo-card-bg);
+      border-bottom: 1px solid var(--kommo-border);
+      display: flex;
+      padding: 0 20px;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .tab-item {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--kommo-text-muted);
+      cursor: pointer;
+      padding-bottom: 15px;
+      margin-top: 15px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-item.active {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* WHATSAPP CHAT IN MODAL */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+      gap: 10px;
+    }
+
+    .chat-bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chat-bubble.bot {
+      background-color: var(--kommo-card-bg);
+      align-self: flex-start;
+      color: var(--kommo-text-main);
+      border-top-left-radius: 2px;
+    }
+
+    .chat-bubble.user {
+      background-color: #DCF8C6;
+      color: #1e293b;
+      align-self: flex-end;
+      border-top-right-radius: 2px;
+    }
+
+    [data-theme="dark"] .chat-bubble.user {
+      background-color: #056162;
+      color: white;
+    }
+
+    .chat-time {
+      font-size: 0.65rem;
+      align-self: flex-end;
+      color: var(--kommo-text-muted);
+    }
+    
+    .chat-system-note {
+      align-self: center;
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin: 5px 0;
+    }
+
+    /* SIMULATOR DRAWER (WHATSAPP DEMO) */
+    .whatsapp-simulator {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 350px;
+      height: 450px;
+      background-color: #ECE5DD;
+      border-radius: 12px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.25);
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    }
+
+    [data-theme="dark"] .whatsapp-simulator {
+      background-color: #0b141a;
+    }
+
+    .whatsapp-simulator.active {
+      transform: translateY(0);
+    }
+
+    .wa-header {
+      background-color: #075E54;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .wa-user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wa-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #94a3b8;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .wa-status {
+      font-size: 0.65rem;
+      opacity: 0.8;
+    }
+
+    .wa-close {
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    .wa-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .wa-bubble {
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .wa-bubble.received {
+      background-color: #FFFFFF;
+      align-self: flex-start;
+      color: #1e293b;
+      border-top-left-radius: 2px;
+    }
+
+    [data-theme="dark"] .wa-bubble.received {
+      background-color: #202c33;
+      color: #e9edef;
+    }
+
+    .wa-bubble.sent {
+      background-color: #d9fdd3;
+      align-self: flex-end;
+      color: #111b21;
+      border-top-right-radius: 2px;
+    }
+
+    [data-theme="dark"] .wa-bubble.sent {
+      background-color: #005c4b;
+      color: #e9edef;
+    }
+
+    .wa-input-area {
+      background-color: #f0f2f5;
+      padding: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    [data-theme="dark"] .wa-input-area {
+      background-color: #111b21;
+    }
+
+    .wa-input {
+      flex: 1;
+      background-color: white;
+      border: none;
+      outline: none;
+      padding: 8px 12px;
+      border-radius: 18px;
+      font-size: 0.8rem;
+      color: #1e293b;
+    }
+
+    [data-theme="dark"] .wa-input {
+      background-color: #2a3942;
+      color: white;
+    }
+
+    .theme-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--kommo-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+    
+    .theme-toggle-btn:hover {
+      background-color: var(--kommo-border);
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">.ai</div>
+    <div class="sidebar-menu">
+      <div class="sidebar-item" title="Entrada">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div class="sidebar-item active" title="Leads (Kanban)">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      </div>
+      <div class="sidebar-item" title="Conversas">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="sidebar-item" title="Listas">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="sidebar-item" title="Estatísticas">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="main-container">
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="breadcrumbs">
+          <span>Leads</span>
+          <span>&gt;</span>
+          <h2>Funil Principal — AtendeOS</h2>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="demo-widget-btn" onclick="startSimulation()" id="startSimBtn">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;"><path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/></svg>
+          Simular WhatsApp Lead
+        </button>
+        <div class="search-bar">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></line><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" placeholder="Pesquisar leads...">
+        </div>
+        <button class="btn-add-lead" onclick="addNewLeadPrompt()">
+          <span>+</span> Novo Lead
+        </button>
+        <button class="theme-toggle-btn" onclick="toggleTheme()" title="Alternar Tema">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- KANBAN BOARD -->
+    <section class="board-container" id="board">
+      
+      <!-- COL 1: WhatsApp Entrada -->
+      <div class="column" id="col-entrada">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-title" style="color: #94A3B8;"><span class="column-dot" style="background-color: #94A3B8;"></span>WhatsApp (Entrada)</span>
+            <span class="column-count" id="count-entrada">2</span>
+          </div>
+          <span class="column-value" id="val-entrada">R$ 0,00</span>
+        </div>
+        <div class="cards-list" ondragover="allowDrop(event)" ondrop="dropCard(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" id="list-entrada">
+          
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-1" onclick="openLeadDetail('lead-1')">
+            <div class="lead-card-header">
+              <span class="lead-name">Marta Oliveira</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag tag-whatsapp">WhatsApp</span>
+              <span class="lead-tag">Aguardando IA</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 0,00</span>
+              <span class="lead-task-indicator late"></span>
+            </div>
+          </div>
+          
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-2" onclick="openLeadDetail('lead-2')">
+            <div class="lead-card-header">
+              <span class="lead-name">José Carlos</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag tag-whatsapp">WhatsApp</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 0,00</span>
+              <span class="lead-task-indicator none"></span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      <!-- COL 2: Contato Inicial -->
+      <div class="column" id="col-contato">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-title" style="color: #F97316;"><span class="column-dot" style="background-color: #F97316;"></span>Contato Inicial</span>
+            <span class="column-count" id="count-contato">3</span>
+          </div>
+          <span class="column-value" id="val-contato">R$ 4.500,00</span>
+        </div>
+        <div class="cards-list" ondragover="allowDrop(event)" ondrop="dropCard(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" id="list-contato">
+          
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-3" onclick="openLeadDetail('lead-3')">
+            <div class="lead-card-header">
+              <span class="lead-name">Clínica Nelson C.</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Segmento: Saúde</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 1.500,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-4" onclick="openLeadDetail('lead-4')">
+            <div class="lead-card-header">
+              <span class="lead-name">Savasi Games</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Segmento: Jogos</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 1.500,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-5" onclick="openLeadDetail('lead-5')">
+            <div class="lead-card-header">
+              <span class="lead-name">GLX Holding</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Segmento: Holding</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 1.500,00</span>
+              <span class="lead-task-indicator none"></span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      <!-- COL 3: Lead Qualificado -->
+      <div class="column" id="col-qualificado">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-title" style="color: #EAB308;"><span class="column-dot" style="background-color: #EAB308;"></span>Qualificado</span>
+            <span class="column-count" id="count-qualificado">2</span>
+          </div>
+          <span class="column-value" id="val-qualificado">R$ 3.000,00</span>
+        </div>
+        <div class="cards-list" ondragover="allowDrop(event)" ondrop="dropCard(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" id="list-qualificado">
+          
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-6" onclick="openLeadDetail('lead-6')">
+            <div class="lead-card-header">
+              <span class="lead-name">Mutirão Visão</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Clínica Médica</span>
+              <span class="lead-tag">Faturamento: C</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 1.500,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-7" onclick="openLeadDetail('lead-7')">
+            <div class="lead-card-header">
+              <span class="lead-name">Doce Mania</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Comércio</span>
+              <span class="lead-tag">Faturamento: B</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 1.500,00</span>
+              <span class="lead-task-indicator none"></span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      <!-- COL 4: Proposta Enviada -->
+      <div class="column" id="col-proposta">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-title" style="color: #A855F7;"><span class="column-dot" style="background-color: #A855F7;"></span>Proposta</span>
+            <span class="column-count" id="count-proposta">2</span>
+          </div>
+          <span class="column-value" id="val-proposta">R$ 6.000,00</span>
+        </div>
+        <div class="cards-list" ondragover="allowDrop(event)" ondrop="dropCard(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" id="list-proposta">
+          
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-8" onclick="openLeadDetail('lead-8')">
+            <div class="lead-card-header">
+              <span class="lead-name">CTV Imperial</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Proposta Feita</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 3.000,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-9" onclick="openLeadDetail('lead-9')">
+            <div class="lead-card-header">
+              <span class="lead-name">Indústria Metal X</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Faturamento: C</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 3.000,00</span>
+              <span class="lead-task-indicator late"></span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      <!-- COL 5: Em Negociação -->
+      <div class="column" id="col-negociacao">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-title" style="color: #EC4899;"><span class="column-dot" style="background-color: #EC4899;"></span>Negociação</span>
+            <span class="column-count" id="count-negociacao">1</span>
+          </div>
+          <span class="column-value" id="val-negociacao">R$ 5.000,00</span>
+        </div>
+        <div class="cards-list" ondragover="allowDrop(event)" ondrop="dropCard(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" id="list-negociacao">
+          
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-10" onclick="openLeadDetail('lead-10')">
+            <div class="lead-card-header">
+              <span class="lead-name">Construtora Aliança</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Alto Padrão</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 5.000,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      <!-- COL 6: Fechado Ganho -->
+      <div class="column" id="col-ganho">
+        <div class="column-header">
+          <div class="column-title-row">
+            <span class="column-title" style="color: #10B981;"><span class="column-dot" style="background-color: #10B981;"></span>Fechado Ganho</span>
+            <span class="column-count" id="count-ganho">4</span>
+          </div>
+          <span class="column-value" id="val-ganho">R$ 14.300,00</span>
+        </div>
+        <div class="cards-list" ondragover="allowDrop(event)" ondrop="dropCard(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" id="list-ganho">
+          
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-11" onclick="openLeadDetail('lead-11')">
+            <div class="lead-card-header">
+              <span class="lead-name">Consultório Dr. Nelson</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag tag-whatsapp">AtendeOS</span>
+              <span class="lead-tag">CRM Pronto</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 5.000,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-12" onclick="openLeadDetail('lead-12')">
+            <div class="lead-card-header">
+              <span class="lead-name">Marta Roupas</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Varejo</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 1.800,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-13" onclick="openLeadDetail('lead-13')">
+            <div class="lead-card-header">
+              <span class="lead-name">Pizzaria Delícia</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Alimentício</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 1.500,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+
+          <div class="lead-card" draggable="true" ondragstart="dragCard(event)" id="lead-14" onclick="openLeadDetail('lead-14')">
+            <div class="lead-card-header">
+              <span class="lead-name">Mercadinho Preço Bom</span>
+              <span class="lead-channel-icon">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+              </span>
+            </div>
+            <div class="lead-tags">
+              <span class="lead-tag">Mercado</span>
+            </div>
+            <div class="lead-card-footer">
+              <span class="lead-price">R$ 6.000,00</span>
+              <span class="lead-task-indicator"></span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- LEAD DETAILS MODAL -->
+  <div class="modal-overlay" id="leadModalOverlay" onclick="closeLeadDetailModal(event)">
+    <div class="lead-modal" onclick="event.stopPropagation()">
+      <!-- Left Info Side -->
+      <div class="modal-left">
+        <div class="modal-left-header">
+          <div class="modal-lead-title">
+            <h3 id="modalLeadName">Marta Oliveira</h3>
+            <span id="modalLeadId">ID: #310485</span>
+          </div>
+          <button class="modal-close-btn" onclick="closeLeadDetailModal()">&#10006;</button>
+        </div>
+        
+        <div class="fields-group">
+          <div class="field-item">
+            <span class="field-label">Faturamento Mensal</span>
+            <div class="field-value" id="modalFieldRevenue">R$ 0,00 (Não qualificado)</div>
+          </div>
+          <div class="field-item">
+            <span class="field-label">Segmento da Empresa</span>
+            <div class="field-value" id="modalFieldSegment">Aguardando Resposta</div>
+          </div>
+          <div class="field-item">
+            <span class="field-label">Telefone (WhatsApp)</span>
+            <div class="field-value" id="modalFieldPhone">+55 (81) 99876-5432</div>
+          </div>
+          <div class="field-item">
+            <span class="field-label">Integração AtendeOS</span>
+            <div class="field-value" id="modalFieldIntegration" style="color: #10B981; font-weight: 600;">Status: Ativo</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Feed / Chat Side -->
+      <div class="modal-right">
+        <div class="modal-right-tabs">
+          <div class="tab-item active">Histórico de Mensagens</div>
+          <div class="tab-item">Notas do CRM</div>
+          <div class="tab-item">Tarefas</div>
+        </div>
+        
+        <div class="chat-container" id="modalChatHistory">
+          <!-- Chat bubbles loaded dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHATSAPP FLOATING SIMULATOR -->
+  <div class="whatsapp-simulator" id="waSim">
+    <div class="wa-header">
+      <div class="wa-user-info">
+        <div class="wa-avatar" id="waAvatar">D</div>
+        <div>
+          <div style="font-weight: 600; font-size: 0.85rem;" id="waLeadName">Douglas (Novo Lead)</div>
+          <div class="wa-status">Online</div>
+        </div>
+      </div>
+      <button class="wa-close" onclick="closeWhatsAppSim()">&#10005;</button>
+    </div>
+    <div class="wa-messages" id="waMessages">
+      <!-- Simulated whatsapp messages -->
+    </div>
+    <div class="wa-input-area">
+      <input type="text" class="wa-input" placeholder="Digite uma resposta..." id="waInput" onkeypress="handleWaInputKey(event)">
+      <button class="btn-add-lead" style="padding: 6px 12px; font-size: 0.75rem;" onclick="sendSimulatedUserMessage()">Enviar</button>
+    </div>
+  </div>
+
+  <!-- JS SIMULATION LOGIC -->
+  <script>
+    // Leads Data store for simulation and detail view
+    const leadsData = {
+      "lead-1": {
+        name: "Marta Oliveira",
+        phone: "+55 (81) 99876-5432",
+        segment: "Aguardando Resposta",
+        revenue: "R$ 0,00 (Não qualificado)",
+        chat: [
+          { sender: "bot", msg: "Olá! Seja bem-vindo ao suporte Ai Atende. Vi que você quer organizar seu WhatsApp com o Kommo CRM. Qual o seu nome e o nome da sua empresa?", time: "14:10" },
+          { sender: "user", msg: "Marta da Oliveira Cosméticos", time: "14:11" },
+          { sender: "bot", msg: "Perfeito, Marta! Qual o segmento comercial de vocês?", time: "14:11" }
+        ]
+      },
+      "lead-2": {
+        name: "José Carlos",
+        phone: "+55 (11) 98765-4321",
+        segment: "Comércio Varejista",
+        revenue: "R$ 0,00 (Não qualificado)",
+        chat: [
+          { sender: "bot", msg: "Olá, José! Como podemos te ajudar hoje com a automação de vendas?", time: "11:20" },
+          { sender: "user", msg: "Quero ver como funciona a distribuição de leads", time: "11:22" }
+        ]
+      },
+      "lead-3": {
+        name: "Clínica Nelson C.",
+        phone: "+55 (81) 93830-3430",
+        segment: "Saúde",
+        revenue: "R$ 1.500,00 (Avaliação)",
+        chat: [
+          { sender: "bot", msg: "Olá! Obrigado pelo contato. Qual especialidade da clínica?", time: "Ontem" },
+          { sender: "user", msg: "Cardiologia e Clínico Geral.", time: "Ontem" }
+        ]
+      },
+      "lead-4": {
+        name: "Savasi Games",
+        phone: "+55 (31) 97766-5544",
+        segment: "Jogos / Entretenimento",
+        revenue: "R$ 1.500,00 (Avaliação)",
+        chat: [
+          { sender: "bot", msg: "Olá! Qual o faturamento mensal da loja de games?", time: "Ontem" },
+          { sender: "user", msg: "Cerca de 25 mil por mês.", time: "Ontem" }
+        ]
+      },
+      "lead-5": {
+        name: "GLX Holding",
+        phone: "+55 (21) 96655-4433",
+        segment: "Holding / Finanças",
+        revenue: "R$ 1.500,00 (Avaliação)",
+        chat: [
+          { sender: "bot", msg: "Olá! Quantos atendentes vocês têm no comercial?", time: "2 dias atrás" },
+          { sender: "user", msg: "Temos 5 corretores ativos.", time: "2 dias atrás" }
+        ]
+      },
+      "lead-6": {
+        name: "Mutirão Visão",
+        phone: "+55 (81) 94433-2211",
+        segment: "Clínica Médica",
+        revenue: "R$ 1.500,00 (Plano Gold)",
+        chat: [
+          { sender: "bot", msg: "Seja bem-vindo. Qual a sua principal dor no WhatsApp hoje?", time: "3 dias atrás" },
+          { sender: "user", msg: "Perdemos muitos pacientes que agendam e esquecem.", time: "3 dias atrás" },
+          { sender: "bot", msg: "Excelente, nós automatizamos lembretes de consulta automáticos!", time: "3 dias atrás" }
+        ]
+      },
+      "lead-7": {
+        name: "Doce Mania",
+        phone: "+55 (81) 91122-3344",
+        segment: "Comércio / Alimentício",
+        revenue: "R$ 1.500,00 (Plano Gold)",
+        chat: [
+          { sender: "bot", msg: "Oi! A Doce Mania vende no atacado ou varejo?", time: "Ontem" },
+          { sender: "user", msg: "Vendemos doces finos sob encomenda.", time: "Ontem" }
+        ]
+      },
+      "lead-8": {
+        name: "CTV Imperial",
+        phone: "+55 (85) 98877-6655",
+        segment: "TV / Mídia",
+        revenue: "R$ 3.000,00",
+        chat: [
+          { sender: "bot", msg: "A proposta comercial para integração com o CRM Kommo foi enviada para o seu e-mail.", time: "4 dias atrás" },
+          { sender: "user", msg: "Recebido, vou analisar com a diretoria.", time: "4 dias atrás" }
+        ]
+      },
+      "lead-9": {
+        name: "Indústria Metal X",
+        phone: "+55 (47) 97788-9900",
+        segment: "Metalurgia",
+        revenue: "R$ 3.000,00",
+        chat: [
+          { sender: "bot", msg: "Proposta de automação de funil industrial enviada.", time: "Ontem" }
+        ]
+      },
+      "lead-10": {
+        name: "Construtora Aliança",
+        phone: "+55 (11) 95544-3322",
+        segment: "Construção Civil",
+        revenue: "R$ 5.000,00 (Anual)",
+        chat: [
+          { sender: "user", msg: "Gostamos da simulação, fechamos se parcelar em 3x.", time: "Ontem" },
+          { sender: "bot", msg: "Perfeito, vou liberar o link com o desconto parcelado.", time: "Ontem" }
+        ]
+      },
+      "lead-11": {
+        name: "Consultório Dr. Nelson",
+        phone: "+55 (81) 99988-7766",
+        segment: "Saúde",
+        revenue: "R$ 5.000,00 (Fechado)",
+        chat: [
+          { sender: "bot", msg: "Parabéns pela parceria! Sistema de automações de consulta ativo.", time: "1 semana atrás" }
+        ]
+      },
+      "lead-12": {
+        name: "Marta Roupas",
+        phone: "+55 (81) 98877-1122",
+        segment: "Varejo",
+        revenue: "R$ 1.800,00 (Fechado)",
+        chat: [
+          { sender: "bot", msg: "Seu pipeline no Kommo CRM foi estruturado.", time: "2 semanas atrás" }
+        ]
+      },
+      "lead-13": {
+        name: "Pizzaria Delícia",
+        phone: "+55 (81) 97766-3322",
+        segment: "Alimentício",
+        revenue: "R$ 1.500,00 (Fechado)",
+        chat: [
+          { sender: "bot", msg: "Atendente inteligente configurado no WhatsApp de Delivery.", time: "3 semanas atrás" }
+        ]
+      },
+      "lead-14": {
+        name: "Mercadinho Preço Bom",
+        phone: "+55 (81) 96655-2211",
+        segment: "Supermercado",
+        revenue: "R$ 6.000,00 (Fechado)",
+        chat: [
+          { sender: "bot", msg: "Integração Kommo CRM rodando com sucesso.", time: "1 mês atrás" }
+        ]
+      }
+    };
+
+    // Keep track of total values and counts
+    function updateBoardMetrics() {
+      const columns = ['entrada', 'contato', 'qualificado', 'proposta', 'negociacao', 'ganho'];
+      
+      columns.forEach(col => {
+        const list = document.getElementById(`list-${col}`);
+        const countEl = document.getElementById(`count-${col}`);
+        const valEl = document.getElementById(`val-${col}`);
+        
+        if (!list || !countEl || !valEl) return;
+        
+        const cards = list.querySelectorAll('.lead-card');
+        countEl.textContent = cards.length;
+        
+        let sum = 0;
+        cards.forEach(card => {
+          const leadId = card.id;
+          const leadInfo = leadsData[leadId];
+          if (leadInfo) {
+            const priceStr = leadInfo.revenue.replace(/[^\d]/g, '');
+            const priceVal = parseFloat(priceStr) / 100 || 0;
+            sum += priceVal;
+          }
+        });
+        
+        valEl.textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sum);
+      });
+    }
+
+    // Drag and Drop implementation
+    let draggedCardId = null;
+
+    function dragCard(event) {
+      draggedCardId = event.target.id;
+      event.dataTransfer.setData("text/plain", draggedCardId);
+      event.target.style.opacity = "0.5";
+    }
+
+    document.addEventListener("dragend", function(event) {
+      if (event.target.classList.contains("lead-card")) {
+        event.target.style.opacity = "1";
+      }
+    });
+
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+
+    function dragEnter(event) {
+      const column = event.target.closest('.column');
+      if (column) {
+        column.classList.add('drag-over');
+      }
+    }
+
+    function dragLeave(event) {
+      const column = event.target.closest('.column');
+      if (column) {
+        column.classList.remove('drag-over');
+      }
+    }
+
+    function dropCard(event) {
+      event.preventDefault();
+      const listContainer = event.target.closest('.cards-list');
+      const column = event.target.closest('.column');
+      
+      if (column) {
+        column.classList.remove('drag-over');
+      }
+      
+      if (listContainer && draggedCardId) {
+        const cardEl = document.getElementById(draggedCardId);
+        listContainer.appendChild(cardEl);
+        
+        // Log note inside the lead details for movement audit
+        const lead = leadsData[draggedCardId];
+        const newStage = column.querySelector('.column-title').textContent.trim();
+        if (lead) {
+          lead.chat.push({
+            sender: "system",
+            msg: `Lead movido manualmente para a etapa: ${newStage}`,
+            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          });
+        }
+        
+        updateBoardMetrics();
+      }
+      draggedCardId = null;
+    }
+
+    // Open Lead Details Modal
+    function openLeadDetail(leadId) {
+      const lead = leadsData[leadId];
+      if (!lead) return;
+
+      document.getElementById('modalLeadName').textContent = lead.name;
+      document.getElementById('modalLeadId').textContent = `ID: #${leadId.replace('lead-', '3104')}`;
+      document.getElementById('modalFieldRevenue').textContent = lead.revenue;
+      document.getElementById('modalFieldSegment').textContent = lead.segment;
+      document.getElementById('modalFieldPhone').textContent = lead.phone;
+
+      // Populate messages feed
+      const chatHistoryContainer = document.getElementById('modalChatHistory');
+      chatHistoryContainer.innerHTML = '';
+      
+      lead.chat.forEach(msg => {
+        if (msg.sender === "system") {
+          const note = document.createElement('div');
+          note.className = 'chat-system-note';
+          note.textContent = msg.msg;
+          chatHistoryContainer.appendChild(note);
+        } else {
+          const bubble = document.createElement('div');
+          bubble.className = `chat-bubble ${msg.sender}`;
+          bubble.innerHTML = `
+            <div>${msg.msg}</div>
+            <span class="chat-time">${msg.time}</span>
+          `;
+          chatHistoryContainer.appendChild(bubble);
+        }
+      });
+
+      document.getElementById('leadModalOverlay').classList.add('active');
+    }
+
+    function closeLeadDetailModal(event) {
+      if (!event || event.target.id === "leadModalOverlay" || event.target.classList.contains("modal-close-btn")) {
+        document.getElementById('leadModalOverlay').classList.remove('active');
+      }
+    }
+
+    // New Lead Manual Prompt
+    function addNewLeadPrompt() {
+      const name = prompt("Digite o nome do novo Lead:");
+      if (!name) return;
+      const phone = prompt("Digite o telefone/WhatsApp (ex: 81998765432):", "819");
+      if (!phone) return;
+      
+      const newId = `lead-${Date.now()}`;
+      
+      leadsData[newId] = {
+        name: name,
+        phone: `+55 ${phone}`,
+        segment: "Aguardando Qualificação",
+        revenue: "R$ 0,00",
+        chat: [
+          { sender: "system", msg: "Lead cadastrado manualmente no painel", time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
+        ]
+      };
+      
+      // Spawn card HTML
+      const card = document.createElement('div');
+      card.className = 'lead-card';
+      card.draggable = true;
+      card.id = newId;
+      card.setAttribute('onclick', `openLeadDetail('${newId}')`);
+      card.ondragstart = dragCard;
+      card.innerHTML = `
+        <div class="lead-card-header">
+          <span class="lead-name">${name}</span>
+          <span class="lead-channel-icon">&#9993;</span>
+        </div>
+        <div class="lead-tags">
+          <span class="lead-tag">Manual</span>
+        </div>
+        <div class="lead-card-footer">
+          <span class="lead-price">R$ 0,00</span>
+          <span class="lead-task-indicator none"></span>
+        </div>
+      `;
+      
+      document.getElementById('list-entrada').appendChild(card);
+      updateBoardMetrics();
+    }
+
+    // Toggle Dark Theme
+    function toggleTheme() {
+      const body = document.body;
+      const currentTheme = body.getAttribute('data-theme');
+      if (currentTheme === "dark") {
+        body.setAttribute('data-theme', 'light');
+      } else {
+        body.setAttribute('data-theme', 'dark');
+      }
+    }
+
+    // WHATSAPP AUTOMATION SIMULATION STATE MACHINE
+    let simStage = 0;
+    let simLeadId = null;
+    let simLeadName = "Douglas (Simulado)";
+    
+    function startSimulation() {
+      // Toggle button during simulation
+      document.getElementById('startSimBtn').disabled = true;
+      document.getElementById('startSimBtn').style.opacity = "0.5";
+      document.getElementById('startSimBtn').textContent = "Simulação Iniciada...";
+
+      simLeadId = `lead-sim-${Date.now()}`;
+      simLeadName = prompt("Como se chama o cliente simulado do WhatsApp?", "Douglas Vitorio");
+      if (!simLeadName) {
+        simLeadName = "Douglas Vitorio";
+      }
+
+      // Add to leadsData registry
+      leadsData[simLeadId] = {
+        name: simLeadName,
+        phone: "+55 (81) 93830-3430",
+        segment: "Aguardando Qualificação",
+        revenue: "R$ 0,00",
+        chat: []
+      };
+
+      // Spawn card in 'Entrada' column
+      const card = document.createElement('div');
+      card.className = 'lead-card';
+      card.draggable = true;
+      card.id = simLeadId;
+      card.setAttribute('onclick', `openLeadDetail('${simLeadId}')`);
+      card.ondragstart = dragCard;
+      card.style.border = "2px solid #25D366";
+      card.style.boxShadow = "0 0 10px rgba(37, 211, 102, 0.4)";
+      card.innerHTML = `
+        <div class="lead-card-header">
+          <span class="lead-name">${simLeadName}</span>
+          <span class="lead-channel-icon" style="color: #25D366;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-4.98c-.202-.101-1.194-.588-1.378-.656-.185-.067-.32-.101-.456.101-.135.202-.52.656-.637.787-.118.135-.235.148-.438.047a5.587 5.587 0 0 1-1.629-1.005 6.084 6.084 0 0 1-1.127-1.4c-.118-.202-.011-.31.09-.41.09-.09.202-.235.303-.35.101-.117.135-.198.202-.33a.47.47 0 0 0-.022-.447c-.067-.135-.52-1.254-.712-1.72-.188-.453-.377-.39-.52-.397-.135-.007-.29-.007-.447-.007a.857.857 0 0 0-.622.288c-.213.235-.813.794-.813 1.938s.832 2.25 1.018 2.502c.185.252 1.636 2.5 3.962 3.51a12.3 12.3 0 0 0 1.32.4c.53.169 1.012.145 1.393.088.425-.064 1.192-.487 1.358-.959.166-.473.166-.88.116-.959-.05-.08-.185-.117-.386-.218z"/></svg>
+          </span>
+        </div>
+        <div class="lead-tags">
+          <span class="lead-tag tag-whatsapp">WhatsApp</span>
+          <span class="lead-tag" id="tag-sim-status" style="background-color: #25D366; color: white;">Digitando...</span>
+        </div>
+        <div class="lead-card-footer">
+          <span class="lead-price" id="price-sim">R$ 0,00</span>
+          <span class="lead-task-indicator" id="task-sim"></span>
+        </div>
+      `;
+      
+      document.getElementById('list-entrada').prepend(card);
+      updateBoardMetrics();
+
+      // Open WhatsApp simulator box
+      document.getElementById('waLeadName').textContent = simLeadName;
+      document.getElementById('waAvatar').textContent = simLeadName.charAt(0).toUpperCase();
+      document.getElementById('waMessages').innerHTML = '';
+      document.getElementById('waSim').classList.add('active');
+
+      simStage = 1;
+      setTimeout(() => {
+        addWaMessage("received", `Olá, *${simLeadName}*! Seja bem-vindo ao atendimento automatizado da Ai Atende. Estou aqui para qualificar o seu contato. Qual o **nome da sua empresa**?`);
+      }, 1000);
+    }
+
+    function addWaMessage(type, text) {
+      const waMessages = document.getElementById('waMessages');
+      const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      
+      const msgBubble = document.createElement('div');
+      msgBubble.className = `wa-bubble ${type === "received" ? "received" : "sent"}`;
+      msgBubble.innerHTML = `
+        <div>${text}</div>
+        <div style="font-size: 0.6rem; text-align: right; margin-top: 4px; opacity: 0.6;">${time}</div>
+      `;
+      waMessages.appendChild(msgBubble);
+      waMessages.scrollTop = waMessages.scrollHeight;
+
+      // Also append to the internal lead registry
+      const lead = leadsData[simLeadId];
+      if (lead) {
+        lead.chat.push({
+          sender: type === "received" ? "bot" : "user",
+          msg: text,
+          time: time
+        });
+      }
+    }
+
+    function sendSimulatedUserMessage() {
+      const input = document.getElementById('waInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      addWaMessage("sent", text);
+      input.value = '';
+
+      // Progress through automated steps
+      setTimeout(() => {
+        processAutomationStep(text);
+      }, 1500);
+    }
+
+    function handleWaInputKey(event) {
+      if (event.key === 'Enter') {
+        sendSimulatedUserMessage();
+      }
+    }
+
+    function processAutomationStep(userText) {
+      const lead = leadsData[simLeadId];
+      const cardEl = document.getElementById(simLeadId);
+
+      if (simStage === 1) {
+        // User answered company name
+        lead.chat.push({ sender: "system", msg: "Webhook AtendeOS disparado: Atualização de nome da empresa.", time: new Date().toLocaleTimeString() });
+        
+        simStage = 2;
+        addWaMessage("received", `Entendido! E em qual **segmento** de mercado a sua empresa atua? (Ex: Saúde, Tecnologia, Varejo, Alimentício...)`);
+        
+        // Move lead card to 'Contato Inicial' column
+        document.getElementById('list-contato').prepend(cardEl);
+        document.getElementById('tag-sim-status').textContent = "Qualificando";
+        document.getElementById('tag-sim-status').style.backgroundColor = "rgba(249, 115, 22, 0.2)";
+        document.getElementById('tag-sim-status').style.color = "#F97316";
+        updateBoardMetrics();
+      } 
+      else if (simStage === 2) {
+        // User answered segment
+        lead.segment = userText;
+        lead.chat.push({ sender: "system", msg: `Campo 'Segmento' atualizado para: ${userText} via API AtendeOS.`, time: new Date().toLocaleTimeString() });
+        
+        simStage = 3;
+        addWaMessage("received", `Perfeito! Para finalizar e direcionar ao consultor certo, qual a média de **faturamento comercial mensal** de vocês?\n\n*A)* Até R$ 20.000\n*B)* De R$ 20.000 a R$ 100.000\n*C)* Acima de R$ 100.000`);
+      } 
+      else if (simStage === 3) {
+        // User answered revenue
+        let rev = "Não informado";
+        let cardPrice = "R$ 1.500,00";
+        if (userText.toUpperCase().includes('A')) {
+          rev = "Até R$ 20.000/mês";
+          cardPrice = "R$ 1.500,00";
+        } else if (userText.toUpperCase().includes('B')) {
+          rev = "R$ 20.000 a R$ 100.000/mês";
+          cardPrice = "R$ 3.000,00";
+        } else if (userText.toUpperCase().includes('C')) {
+          rev = "Acima de R$ 100.000/mês";
+          cardPrice = "R$ 5.000,00";
+        } else {
+          rev = userText;
+        }
+        
+        lead.revenue = cardPrice + ` (${rev})`;
+        lead.chat.push({ sender: "system", msg: `Qualificação Concluída! Faturamento: ${rev}. Mudando de etapa.`, time: new Date().toLocaleTimeString() });
+
+        // Update card value
+        document.getElementById('price-sim').textContent = cardPrice;
+        
+        // Move lead card to 'Qualificado' column
+        document.getElementById('list-qualificado').prepend(cardEl);
+        document.getElementById('tag-sim-status').textContent = "Qualificado (IA)";
+        document.getElementById('tag-sim-status').style.backgroundColor = "rgba(234, 179, 8, 0.2)";
+        document.getElementById('tag-sim-status').style.color = "#EAB308";
+        
+        updateBoardMetrics();
+        
+        simStage = 4;
+        addWaMessage("received", `Excelente! Seu perfil foi qualificado com sucesso pelo **AtendeOS**!\n\nUm consultor especializado acaba de receber o alerta no painel do Kommo e vai assumir o atendimento para agendar sua demonstração. Obrigado!`);
+        
+        // Finalize task status indicator
+        document.getElementById('task-sim').className = "lead-task-indicator"; // green task created
+
+        // Reset simulation button
+        setTimeout(() => {
+          document.getElementById('startSimBtn').disabled = false;
+          document.getElementById('startSimBtn').style.opacity = "1";
+          document.getElementById('startSimBtn').textContent = "Simular WhatsApp Lead";
+          cardEl.style.border = "1px solid var(--kommo-border)";
+          cardEl.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
+        }, 3000);
+      }
+    }
+
+    function closeWhatsAppSim() {
+      document.getElementById('waSim').classList.remove('active');
+    }
+
+    // Initial metrics calculation
+    window.onload = function() {
+      updateBoardMetrics();
+    };
+  </script>
+</body>
+</html>
