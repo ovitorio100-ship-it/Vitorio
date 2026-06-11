@@ -22,10 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 6. WhatsApp Input Mask
   setupPhoneMask();
 
-  // 7. Modal Control (Open/Close)
-  setupModal();
-
-  // 8. Form Submission via AJAX/Fetch to n8n
+  // 7. Form Submission via AJAX/Fetch to n8n
   setupFormSubmission();
 });
 
@@ -146,8 +143,7 @@ function setupFaqAccordion() {
  * Format phone input dynamically: (XX) XXXXX-XXXX
  */
 function setupPhoneMask() {
-  const phoneInputs = document.querySelectorAll('#lead-phone, #hero-lead-phone');
-  if (phoneInputs.length === 0) return;
+  const phoneInputs = document.querySelectorAll('input[type="tel"]');
 
   phoneInputs.forEach(phoneInput => {
     phoneInput.addEventListener('input', (e) => {
@@ -174,46 +170,7 @@ function setupPhoneMask() {
   });
 }
 
-/**
- * Handle conversion modal open, close, escape key
- */
-function setupModal() {
-  const modal = document.getElementById('diagnostic-modal');
-  const openButtons = document.querySelectorAll('.open-modal-btn');
-  const closeButton = document.getElementById('modal-close');
-  const overlay = document.getElementById('modal-overlay');
 
-  if (!modal) return;
-
-  const openModal = () => {
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden'; // prevent page scrolling
-  };
-
-  const closeModal = () => {
-    modal.classList.remove('active');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = ''; // restore scrolling
-  };
-
-  openButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      openModal();
-    });
-  });
-
-  if (closeButton) closeButton.addEventListener('click', closeModal);
-  if (overlay) overlay.addEventListener('click', closeModal);
-
-  // Close on Escape Key
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('active')) {
-      closeModal();
-    }
-  });
-}
 
 /**
  * Submit form data to n8n webhook and handle responses
@@ -221,16 +178,22 @@ function setupModal() {
 function setupFormSubmission() {
   const formsConfig = [
     {
-      formId: 'diagnostic-form',
-      submitBtnId: 'submit-btn',
-      fields: { name: 'lead-name', phone: 'lead-phone', email: 'lead-email', segment: 'lead-segment', revenue: 'lead-revenue' },
-      origin: 'lp_botconversa_style_modal'
-    },
-    {
       formId: 'hero-diagnostic-form',
       submitBtnId: 'hero-submit-btn',
       fields: { name: 'hero-lead-name', phone: 'hero-lead-phone', email: 'hero-lead-email', segment: 'hero-lead-segment', revenue: 'hero-lead-revenue' },
       origin: 'lp_botconversa_style_hero'
+    },
+    {
+      formId: 'mid-diagnostic-form',
+      submitBtnId: 'mid-submit-btn',
+      fields: { name: 'mid-lead-name', phone: 'mid-lead-phone', email: 'mid-lead-email', segment: 'mid-lead-segment', revenue: 'mid-lead-revenue' },
+      origin: 'lp_botconversa_style_mid'
+    },
+    {
+      formId: 'bottom-diagnostic-form',
+      submitBtnId: 'bottom-submit-btn',
+      fields: { name: 'bottom-lead-name', phone: 'bottom-lead-phone', email: 'bottom-lead-email', segment: 'bottom-lead-segment', revenue: 'bottom-lead-revenue' },
+      origin: 'lp_botconversa_style_bottom'
     }
   ];
 
